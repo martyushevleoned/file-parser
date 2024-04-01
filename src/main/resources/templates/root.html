@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Веб интерфейс для API</h1>
+<hr>
+<h3>Парсинг файла</h3>
+<form enctype="multipart/form-data" name="parseFile" id="parseFile">
+    <input type="file" name="file">
+    <button type="submit">submit</button>
+</form>
+<p><span id="parseFileMessage">Response</span></p>
+<script>
+    const parseFileForm = document.querySelector("#parseFile");
+    const parseFileMessage = document.getElementById('parseFileMessage');
+
+    parseFileForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(parseFileForm);
+        const response = await fetch("http://localhost:8080/parseFile", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok)
+            response.text().then(text => {parseFileMessage.innerHTML = text;})
+        else
+            response.text().then(text => {parseFileMessage.innerHTML = "Parsing failed:" +  text;})
+    });
+</script>
+<hr>
+<h3>Сохранение файла (возвращает id)</h3>
+<form enctype="multipart/form-data" name="saveFile" id="saveFile">
+    <input type="file" name="file">
+    <button type="submit">submit</button>
+</form>
+<p><span id="saveFileMessage">Response</span></p>
+<script>
+    const saveFileForm = document.querySelector("#saveFile");
+    const saveFileMessage = document.getElementById('saveFileMessage');
+
+    saveFileForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(saveFileForm);
+        const response = await fetch("http://localhost:8080/saveFile", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok)
+            response.text().then(text => {saveFileMessage.innerHTML = "file id: <b>" + text + "</b>";})
+        else
+            response.text().then(text => {saveFileMessage.innerHTML = text;})
+    });
+</script>
+<hr>
+<h3>Парсинг сохранённого файла по id</h3>
+<form enctype="multipart/form-data" name="parseSavedFile" id="parseSavedFile">
+    <input placeholder="file id" type="text" name="fileId">
+    <button type="submit">submit</button>
+</form>
+<p><span id="parseSavedFileMessage">Response</span></p>
+<script>
+    const parseSavedFileForm = document.querySelector("#parseSavedFile");
+    const parseSavedFileMessage = document.getElementById('parseSavedFileMessage');
+
+    parseSavedFileForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(parseSavedFileForm);
+        const response = await fetch("http://localhost:8080/parseFileById", {
+          method: "POST",
+          body: formData,
+        });
+
+        response.text().then(text => {
+            parseSavedFileMessage.innerHTML = text;
+        })
+    });
+</script>
+<hr>
+</body>
+</html>
