@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ParseService {
@@ -59,7 +60,7 @@ public class ParseService {
         // счётчик уровня вложенности
         int currentHashtagCount;
         // текущий номер раздела
-        String num = "0";
+        List<Integer> num = new LinkedList<>(List.of(0));
 
         for (String s : strings) {
 
@@ -75,40 +76,25 @@ public class ParseService {
             // если уровень вложенности 1, то отбрасываем всё после первого числа
             // и увеличиваем число на 1
             if (currentHashtagCount == 1) {
-                int dot = dotIndex(num, 1);
-                if (dot != -1)
-                    num = num.substring(0, dot);
-                num = Integer.toString(Integer.parseInt(num) + 1);
+                num = new LinkedList<>(List.of(num.get(0) + 1));
             }
 
             // если уровень вложенности > 1
             if (currentHashtagCount > 1) {
 
-                // проверка на то что раздел является первым в блоке разделов с одинаковым уровнем вложенности
-                if (dotCount(num) == currentHashtagCount - 2) {
-                    num += ".1";
+                // обрезаем номер раздела до актуальной части
+                num = num.stream().limit(currentHashtagCount).collect(Collectors.toList());
 
-                } else {
-                    // определяем индексы в точек между которыми расположено число для увеличения на 1
-                    int currentDot = dotIndex(num, currentHashtagCount - 1);
-                    int nextDot = dotIndex(num, currentHashtagCount);
+                // увеличиваем номер подраздела
+                if (num.size() == currentHashtagCount)
+                    num.set(num.size() - 1, num.get(num.size() - 1) + 1);
 
-                    // проверка на то что после числа нет точки
-                    if (nextDot == -1)
-                        nextDot = num.length();
-
-                    // вырезаем число и прибавляем к нему 1
-                    String add = Integer.toString(
-                            Integer.parseInt(num.substring(currentDot + 1, nextDot)) + 1
-                    );
-
-                    // обрезаем номер раздела до всё ещё актуальной части
-                    // и дописываем изменения относительно номера предыдущего раздела
-                    num = num.substring(0, currentDot + 1) + add;
-                }
+                // добавляем номер подраздела
+                if (num.size() < currentHashtagCount)
+                    num.add(1);
             }
 
-            result.add(num + " " + s.substring(currentHashtagCount));
+            result.add(listToString(num) + " " + s.substring(currentHashtagCount));
         }
 
         return result;
@@ -122,23 +108,9 @@ public class ParseService {
         return s.length();
     }
 
-    private int dotIndex(String s, int n) {
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) == '.')
-                n--;
-
-            if (n == 0)
-                return i;
-        }
-        return -1;
-    }
-
-    private int dotCount(String s) {
-        int counter = 0;
-        for (char c: s.toCharArray()){
-            if (c == '.')
-                counter++;
-        }
-        return counter;
+    private String listToString(List<Integer> list) {
+        StringBuilder stringBuilder = new StringBuilder();
+        list.forEach(i -> stringBuilder.append(".").append(i));
+        return stringBuilder.substring(1);
     }
 }
