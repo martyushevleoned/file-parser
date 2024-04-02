@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -56,11 +57,9 @@ public class ParseService {
 
     private List<String> parse(List<String> strings) {
 
-        List<String> result = new LinkedList<>();
-        // счётчик уровня вложенности
         int currentHashtagCount;
-        // текущий номер раздела
         List<Integer> num = new LinkedList<>(List.of(0));
+        List<String> result = new ArrayList<>(strings.size());
 
         for (String s : strings) {
 
@@ -73,26 +72,17 @@ public class ParseService {
                 continue;
             }
 
-            // если уровень вложенности 1, то отбрасываем всё после первого числа
-            // и увеличиваем число на 1
-            if (currentHashtagCount == 1) {
-                num = new LinkedList<>(List.of(num.get(0) + 1));
-            }
-
-            // если уровень вложенности > 1
-            if (currentHashtagCount > 1) {
-
-                // обрезаем номер раздела до актуальной части
+            // обрезаем номера до актуального для изменения
+            if (num.size() > currentHashtagCount)
                 num = num.stream().limit(currentHashtagCount).collect(Collectors.toList());
 
-                // увеличиваем номер подраздела
-                if (num.size() == currentHashtagCount)
-                    num.set(num.size() - 1, num.get(num.size() - 1) + 1);
-
-                // добавляем номер подраздела
-                if (num.size() < currentHashtagCount)
+            // увеличиваем номер последнего раздела на 1
+            // или дописываем уровни вложенности
+            if (num.size() == currentHashtagCount)
+                num.set(num.size() - 1, num.get(num.size() - 1) + 1);
+            else
+                while (num.size() != currentHashtagCount)
                     num.add(1);
-            }
 
             result.add(listToString(num) + " " + s.substring(currentHashtagCount));
         }
